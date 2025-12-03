@@ -1,71 +1,54 @@
-import sys
 import signal
 import os
+from cursor import cursor as cursor
 
-cols: int = 0
-lines: int = 0
-
-def hide_cursor() -> None:
-    print('\033[?25l', end='')
-
-def show_cursor() -> None:
-    print('\033[?25h', end='')
+def clear() -> None:
+    os.system('clear')
 
 def update_size() -> None:
-    global cols
-    global lines
-
     size: os.terminal_size = os.get_terminal_size()
-    cols = size.columns
-    lines = size.lines
+    cursor.x = size.columns
+    cursor.y = size.lines
 
 def handle_resize(sig, frame) -> None:
     update_size()
     draw()
 
-def clear() -> None:
-    os.system('clear')
-
-def move(x: int, y: int) -> None:
-    sys.stdout.write(f'\033[{y};{x}H')
-    sys.stdout.flush()
-
 def draw_at(x: int, y: int, contents: str) -> None:
-    move(x, y)
+    cursor.move(x, y)
     print(f'\033[{y};{x}H{contents}', end='')
 
 def draw() -> None:
-    global cols
-    global lines
-
     clear()
     draw_at(1, 1, '󰁛')
-    draw_at(1, lines, '󰁂')
-    draw_at(cols, 1, '󰁜')
-    draw_at(cols, lines, '󰁃')
+    draw_at(1, cursor.y, '󰁂')
+    draw_at(cursor.x, 1, '󰁜')
+    draw_at(cursor.x, cursor.y, '󰁃')
 
-    resolution: str = f'{cols}x{lines}'
-    res_col: int = (cols - len(resolution)) // 2 + 1
-    res_line: int = lines // 2 if lines % 2 == 0 else lines // 2 + 1
+    resolution: str = f'{cursor.x}x{cursor.y}'
+    res_col: int = (cursor.x - len(resolution)) // 2 + 1
+    res_line: int = cursor.y // 2 if cursor.y % 2 == 0 else cursor.y // 2 + 1
 
-    if len(resolution) < cols - 2 or lines >= 3:
+    if len(resolution) < cursor.x - 2 or cursor.y >= 3:
         draw_at(res_col, res_line, resolution)
 
-    move(0, 0)
+    cursor.move(0, 0)
 
 def main() -> None:
     signal.signal(signal.SIGWINCH, handle_resize)
-    hide_cursor()
+    cursor.hide()
+
+    update_size()
+    draw()
 
     try:
-        update_size()
-        draw()
         input()
     except KeyboardInterrupt:
-        clear()
-        show_cursor()
+        pass
 
-    show_cursor()
+    clear()
+    cursor.show();
 
 if __name__ == '__main__':
     main()
+
