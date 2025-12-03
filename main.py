@@ -43,6 +43,14 @@ def draw() -> None:
     draw_at(1, lines, '󰁂')
     draw_at(cols, 1, '󰁜')
     draw_at(cols, lines, '󰁃')
+
+    resolution: str = f'{cols}x{lines}'
+    res_col: int = (cols - len(resolution)) // 2 + 1
+    res_line: int = lines // 2 if lines % 2 == 0 else lines // 2 + 1
+
+    if len(resolution) < cols - 2 or lines >= 3:
+        draw_at(res_col, res_line, resolution)
+
     move(0, 0)
 
 def main() -> None:
